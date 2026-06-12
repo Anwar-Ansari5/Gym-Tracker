@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+{% block title %}Log Workout – Gym Tracker{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-7 col-lg-6">
+    <div class="card">
+      <div class="card-body p-4">
+        <h4 class="card-title mb-4"><i class="ti ti-barbell me-2"></i>Log a workout</h4>
+
+        <form method="POST" action="{{ url_for('log_workout') }}">
+
+          <!-- Date -->
+          <div class="mb-3">
+            <label class="form-label">Date <span class="text-danger">*</span></label>
+            <input type="date" name="date" class="form-control" value="{{ today }}" required />
+          </div>
+
+          <!-- Exercise picker -->
+          <div class="mb-3">
+            <label class="form-label">Exercise <span class="text-danger">*</span></label>
+            <select name="exercise_id" id="exerciseSelect" class="form-select">
+              <option value="">— select —</option>
+              {% for ex in exercises %}
+                <option value="{{ ex.id }}">{{ ex.name }}</option>
+              {% endfor %}
+              <option value="__new__">+ Add new exercise…</option>
+            </select>
+          </div>
+
+          <!-- New exercise name (hidden by default) -->
+          <div class="mb-3" id="newExerciseBox" style="display:none">
+            <label class="form-label">New exercise name</label>
+            <input type="text" name="new_exercise" id="newExercise" class="form-control" placeholder="e.g. Cable fly" />
+            <div class="form-text">This will be saved and available for future logs.</div>
+          </div>
+
+          <!-- Sets / Reps / Weight -->
+          <div class="row g-3 mb-3">
+            <div class="col-4">
+              <label class="form-label">Sets <span class="text-danger">*</span></label>
+              <input type="number" name="sets" class="form-control" min="1" max="20" placeholder="4" required />
+            </div>
+            <div class="col-4">
+              <label class="form-label">Reps <span class="text-danger">*</span></label>
+              <input type="number" name="reps" class="form-control" min="1" max="100" placeholder="8" required />
+            </div>
+            <div class="col-4">
+              <label class="form-label">Weight (kg) <span class="text-danger">*</span></label>
+              <input type="number" name="weight" class="form-control" min="0" step="0.5" placeholder="80" required />
+            </div>
+          </div>
+
+          <!-- Notes -->
+          <div class="mb-4">
+            <label class="form-label">Notes <span class="text-muted">(optional)</span></label>
+            <textarea name="notes" class="form-control" rows="2" placeholder="e.g. Felt strong today, paused reps"></textarea>
+          </div>
+
+          <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary flex-grow-1">
+              <i class="ti ti-check me-1"></i>Save log
+            </button>
+            <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">Cancel</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  document.getElementById('exerciseSelect').addEventListener('change', function () {
+    const box = document.getElementById('newExerciseBox');
+    const inp = document.getElementById('newExercise');
+    if (this.value === '__new__') {
+      box.style.display = 'block';
+      this.value = '';   // clear so exercise_id is empty → triggers new_exercise path
+      inp.focus();
+    } else {
+      box.style.display = 'none';
+      inp.value = '';
+    }
+  });
+</script>
+{% endblock %}

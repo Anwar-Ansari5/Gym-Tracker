@@ -1,0 +1,191 @@
+{% extends 'base.html' %}
+{% block title %}Exercise Library – Gym Tracker{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-2">
+  <h4 class="mb-0"><i class="ti ti-dumbbell me-2" style="color:var(--accent)"></i>Exercise Library</h4>
+</div>
+<p class="text-muted small mb-4">Proper form demos for each exercise. Click any card to log it.</p>
+
+<!-- Filter bar -->
+<div class="filter-bar mb-4">
+  <button class="filter-pill active" onclick="filterGroup('all', this)">All</button>
+  <button class="filter-pill" onclick="filterGroup('chest', this)">Chest</button>
+  <button class="filter-pill" onclick="filterGroup('back', this)">Back</button>
+  <button class="filter-pill" onclick="filterGroup('legs', this)">Legs</button>
+  <button class="filter-pill" onclick="filterGroup('shoulders', this)">Shoulders</button>
+  <button class="filter-pill" onclick="filterGroup('arms', this)">Arms</button>
+  <button class="filter-pill" onclick="filterGroup('core', this)">Core</button>
+  <button class="filter-pill" onclick="filterGroup('cardio', this)">Cardio</button>
+</div>
+
+<div class="row g-4" id="exerciseGrid">
+
+  {% set exercises = [
+    ('Bench Press', 'chest', 'Pectorals · Triceps · Front Delts',
+     'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=600&auto=format&fit=crop',
+     'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9a/Bench_press_1.jpg/320px-Bench_press_1.jpg',
+     ['Lie flat on bench', 'Grip bar slightly wider than shoulders', 'Lower bar to mid-chest', 'Press explosively up'],
+     ['Flat BB', 'Incline BB', 'Decline BB', 'DB Press']),
+
+    ('Push-up', 'chest', 'Pectorals · Triceps · Core',
+     'https://images.unsplash.com/photo-1616803689943-5601631c7fec?w=600&auto=format&fit=crop',
+     'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f4/Push_up_1_st_position.jpg/320px-Push_up_1_st_position.jpg',
+     ['Hands shoulder-width apart', 'Body in a straight line', 'Lower chest to floor', 'Push back up fully'],
+     ['Standard', 'Wide Grip', 'Diamond', 'Archer']),
+
+    ('Cable Fly', 'chest', 'Pectorals · Front Delts',
+     'https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?w=600&auto=format&fit=crop',
+     'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2b/Cable_fly.jpg/320px-Cable_fly.jpg',
+     ['Set cables at shoulder height', 'Step forward, slight lean', 'Arc arms together in front', 'Squeeze chest at peak'],
+     ['High Cable', 'Low Cable', 'Mid Cable', 'DB Fly']),
+
+    ('Deadlift', 'back', 'Erectors · Glutes · Hamstrings · Traps',
+     'https://images.unsplash.com/photo-1534368959876-26bf04f2c947?w=600&auto=format&fit=crop',
+     'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a4/Cadeadlift.jpg/320px-Cadeadlift.jpg',
+     ['Bar over mid-foot', 'Hip-width stance, hinge at hips', 'Chest up, back flat', 'Drive hips forward to stand'],
+     ['Conventional', 'Sumo', 'Romanian', 'Stiff-leg']),
+
+    ('Pull-up', 'back', 'Lats · Biceps · Rear Delts',
+     'https://images.unsplash.com/photo-1604480133435-25b86862d276?w=600&auto=format&fit=crop',
+     'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0b/Pullup_correct.jpg/192px-Pullup_correct.jpg',
+     ['Hang with arms fully extended', 'Pull elbows down to sides', 'Chin clears the bar', 'Lower slowly with control'],
+     ['Wide Grip', 'Close Grip', 'Chin-up', 'Neutral Grip']),
+
+    ('Barbell Row', 'back', 'Lats · Rhomboids · Rear Delts · Biceps',
+     'https://images.unsplash.com/photo-1638536532686-d610adfc8e5c?w=600&auto=format&fit=crop',
+     'https://upload.wikimedia.org/wikipedia/commons/thumb/6/6c/Barbell_Row.jpg/320px-Barbell_Row.jpg',
+     ['Hinge forward at hips ~45 deg', 'Pull bar to lower chest', 'Squeeze shoulder blades', 'Lower under control'],
+     ['Bent-over BB', 'Pendlay Row', 'DB Row', 'Cable Row']),
+
+    ('Squat', 'legs', 'Quads · Glutes · Hamstrings · Core',
+     'https://images.unsplash.com/photo-1567598508481-65985588e295?w=600&auto=format&fit=crop',
+     'https://upload.wikimedia.org/wikipedia/commons/thumb/3/35/Woman_doing_a_squat.jpg/240px-Woman_doing_a_squat.jpg',
+     ['Feet shoulder-width apart', 'Brace core, chest up', 'Break at hips and knees together', 'Drive through heels to stand'],
+     ['Back Squat', 'Front Squat', 'Goblet', 'Bulgarian Split']),
+
+    ('Leg Press', 'legs', 'Quads · Glutes · Hamstrings',
+     'https://images.unsplash.com/photo-1597452485669-2c7bb5fef90d?w=600&auto=format&fit=crop',
+     'https://upload.wikimedia.org/wikipedia/commons/thumb/a/ab/Leg_press.jpg/320px-Leg_press.jpg',
+     ['Feet hip-width on platform', 'Lower until 90 degree knee bend', 'Do not lock knees at top', 'Keep lower back flat'],
+     ['Standard', 'Narrow Stance', 'Wide Stance', 'Single Leg']),
+
+    ('Lunge', 'legs', 'Quads · Glutes · Hamstrings',
+     'https://images.unsplash.com/photo-1574680178050-55c6a6a96e0a?w=600&auto=format&fit=crop',
+     'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9f/Lunge_1.jpg/190px-Lunge_1.jpg',
+     ['Step forward with one leg', 'Lower back knee toward floor', 'Front knee stays over ankle', 'Push back to start'],
+     ['Walking', 'Reverse', 'Lateral', 'DB Lunge']),
+
+    ('Overhead Press', 'shoulders', 'Front Delts · Side Delts · Triceps',
+     'https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?w=600&auto=format&fit=crop',
+     'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5e/Overhead_press.jpg/192px-Overhead_press.jpg',
+     ['Bar at collar bone level', 'Brace core, feet shoulder-width', 'Press bar overhead in straight line', 'Lock out at top, lower with control'],
+     ['Standing BB', 'Seated DB', 'Arnold Press', 'Push Press']),
+
+    ('Lateral Raise', 'shoulders', 'Side Delts',
+     'https://images.unsplash.com/photo-1598971639058-fab3c3109a73?w=600&auto=format&fit=crop',
+     'https://upload.wikimedia.org/wikipedia/commons/thumb/2/21/Lateral_raise.jpg/192px-Lateral_raise.jpg',
+     ['Stand with DBs at sides', 'Slight bend in elbows', 'Raise arms to shoulder height', 'Lower slowly — do not drop'],
+     ['DB', 'Cable', 'Machine', 'Leaning']),
+
+    ('Bicep Curl', 'arms', 'Biceps · Brachialis',
+     'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=600&auto=format&fit=crop',
+     'https://upload.wikimedia.org/wikipedia/commons/thumb/7/7e/Curl_motion.gif/192px-Curl_motion.gif',
+     ['Stand with DBs at sides', 'Keep elbows fixed at ribs', 'Curl up with supinated grip', 'Lower fully each rep'],
+     ['BB Curl', 'DB Curl', 'Hammer Curl', 'Preacher Curl']),
+
+    ('Tricep Pushdown', 'arms', 'Triceps (all 3 heads)',
+     'https://images.unsplash.com/photo-1530822847156-5df684ec5933?w=600&auto=format&fit=crop',
+     'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e4/Tricep_pushdown.jpg/192px-Tricep_pushdown.jpg',
+     ['Stand at cable, elbows at sides', 'Push bar down to full extension', 'Squeeze triceps at bottom', 'Return slowly to start'],
+     ['Rope', 'Straight Bar', 'V-Bar', 'Overhead Extension']),
+
+    ('Plank', 'core', 'Abs · Obliques · Lower Back',
+     'https://images.unsplash.com/photo-1571945153237-4929e783af4a?w=600&auto=format&fit=crop',
+     'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4f/Plank_1.jpg/320px-Plank_1.jpg',
+     ['Forearms and toes on floor', 'Body in one straight line', 'Squeeze glutes and abs', 'Hold — do not let hips drop'],
+     ['Standard', 'Side Plank', 'RKC Plank', 'Weighted']),
+
+    ('Running', 'cardio', 'Full Body · Heart & Lungs',
+     'https://images.unsplash.com/photo-1538805060514-97d9cc17730c?w=600&auto=format&fit=crop',
+     'https://upload.wikimedia.org/wikipedia/commons/thumb/1/19/Jogging_at_Corktown_Common%2C_Toronto.jpg/320px-Jogging_at_Corktown_Common%2C_Toronto.jpg',
+     ['Land mid-foot, not heel', 'Arms swing forward not across', 'Keep torso upright', 'Controlled breathing rhythm'],
+     ['Steady State', 'Intervals', 'Hill Sprints', 'Tempo Run']),
+
+    ('Jump Rope', 'cardio', 'Calves · Coordination · Endurance',
+     'https://images.unsplash.com/photo-1434596922112-19c563067271?w=600&auto=format&fit=crop',
+     'https://upload.wikimedia.org/wikipedia/commons/thumb/6/6b/Jumping_rope.jpg/192px-Jumping_rope.jpg',
+     ['Elbows close to body', 'Turn rope with wrists not arms', 'Small jumps — just clear the rope', 'Land softly on balls of feet'],
+     ['Basic Jump', 'Double Under', 'Alternating Feet', 'Boxer Step']),
+  ] %}
+
+  {% for name, group, muscles, img, form_img, cues, variations in exercises %}
+  <div class="col-12 col-md-6 col-lg-4 ex-card-wrap" data-group="{{ group }}">
+    <div class="ex-card-full">
+      <!-- Header image -->
+      <div class="ex-img-wrap">
+        <img src="{{ img }}" alt="{{ name }}" class="ex-main-img" loading="lazy" />
+        <span class="ex-badge {{ group }}">{{ group|upper }}</span>
+        <div class="ex-name-overlay">{{ name }}</div>
+      </div>
+
+      <!-- Form demo + cues -->
+      <div class="ex-body">
+        <div class="row g-0">
+          <!-- Form demo image -->
+          <div class="col-5">
+            <div class="form-demo-wrap">
+              <img src="{{ form_img }}" alt="{{ name }} form" class="form-demo-img" loading="lazy"
+                   onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" />
+              <div class="form-demo-fallback" style="display:none">
+                <i class="ti ti-user" style="font-size:2rem;color:var(--muted)"></i>
+              </div>
+              <div class="form-demo-label">Form Demo</div>
+            </div>
+          </div>
+          <!-- Coaching cues -->
+          <div class="col-7 ps-3">
+            <div class="cues-title">Key cues</div>
+            <ul class="cues-list">
+              {% for cue in cues %}
+              <li>{{ cue }}</li>
+              {% endfor %}
+            </ul>
+          </div>
+        </div>
+
+        <!-- Muscles -->
+        <div class="ex-muscles-row">
+          <i class="ti ti-target me-1" style="color:var(--accent)"></i>{{ muscles }}
+        </div>
+
+        <!-- Variation tags -->
+        <div class="ex-variations mt-2">
+          {% for v in variations %}
+          <span class="var-tag">{{ v }}</span>
+          {% endfor %}
+        </div>
+
+        <!-- Log button -->
+        <a href="{{ url_for('log_workout') }}" class="btn btn-primary btn-sm w-100 mt-3">
+          <i class="ti ti-plus me-1"></i>Log this exercise
+        </a>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function filterGroup(group, btn) {
+  document.querySelectorAll('.filter-pill').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.ex-card-wrap').forEach(card => {
+    card.style.display = (group === 'all' || card.dataset.group === group) ? '' : 'none';
+  });
+}
+</script>
+{% endblock %}

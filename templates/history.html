@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+{% block title %}History – Gym Tracker{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-4">
+  <h4 class="mb-0"><i class="ti ti-history me-2"></i>Workout history</h4>
+  <a href="{{ url_for('log_workout') }}" class="btn btn-primary btn-sm">
+    <i class="ti ti-plus me-1"></i>Log workout
+  </a>
+</div>
+
+<!-- Filter by exercise -->
+<form method="GET" class="d-flex gap-2 mb-4" style="max-width:380px">
+  <select name="exercise_id" class="form-select form-select-sm">
+    <option value="">All exercises</option>
+    {% for ex in exercises %}
+      <option value="{{ ex.id }}" {% if selected_exercise == ex.id %}selected{% endif %}>{{ ex.name }}</option>
+    {% endfor %}
+  </select>
+  <button type="submit" class="btn btn-outline-secondary btn-sm px-3">Filter</button>
+  {% if selected_exercise %}
+    <a href="{{ url_for('history') }}" class="btn btn-outline-danger btn-sm px-3">Clear</a>
+  {% endif %}
+</form>
+
+{% if logs %}
+  <div class="card">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Exercise</th>
+            <th class="text-center">Sets</th>
+            <th class="text-center">Reps</th>
+            <th class="text-end">Weight</th>
+            <th>Notes</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for log in logs %}
+            <tr>
+              <td class="text-muted small">{{ log.date }}</td>
+              <td><strong>{{ log.exercise_name }}</strong></td>
+              <td class="text-center">{{ log.sets }}</td>
+              <td class="text-center">{{ log.reps }}</td>
+              <td class="text-end"><span class="badge-weight">{{ log.weight }} kg</span></td>
+              <td class="text-muted small">{{ log.notes or '—' }}</td>
+              <td class="text-end">
+                <form method="POST" action="{{ url_for('delete_log', log_id=log.id) }}"
+                      onsubmit="return confirm('Delete this log entry?')">
+                  <button type="submit" class="btn btn-link btn-sm text-danger p-0" title="Delete">
+                    <i class="ti ti-trash"></i>
+                  </button>
+                </form>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <p class="text-muted small mt-2">{{ logs | length }} entries shown.</p>
+{% else %}
+  <div class="card">
+    <div class="card-body text-center py-5">
+      <i class="ti ti-clipboard-off" style="font-size:40px;color:#6b7280"></i>
+      <p class="text-muted mt-3">No logs found. <a href="{{ url_for('log_workout') }}">Log your first workout!</a></p>
+    </div>
+  </div>
+{% endif %}
+{% endblock %}

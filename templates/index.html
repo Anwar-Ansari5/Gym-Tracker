@@ -1,0 +1,212 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard – Gym Tracker{% endblock %}
+
+{% block content %}
+<!-- Stats row -->
+<div class="row g-3 mb-4">
+  <div class="col-6 col-md-3">
+    <div class="stat-card">
+      <div class="stat-label"><i class="ti ti-calendar me-1"></i>Total sessions</div>
+      <div class="stat-value">{{ total_sessions }}</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="stat-card">
+      <div class="stat-label"><i class="ti ti-list me-1"></i>Sets logged</div>
+      <div class="stat-value">{{ total_logs }}</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="stat-card">
+      <div class="stat-label"><i class="ti ti-trophy me-1"></i>PRs tracked</div>
+      <div class="stat-value">{{ prs | length }}</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="stat-card">
+      <a href="{{ url_for('log_workout') }}" class="btn btn-primary w-100 h-100 d-flex align-items-center justify-content-center gap-2">
+        <i class="ti ti-plus" style="font-size:20px"></i> Log workout
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- Progress chart + Recent logs -->
+<div class="row g-4 mb-4">
+  <div class="col-lg-7">
+    <div class="card h-100">
+      <div class="card-body">
+        <div class="d-flex align-items-center justify-content-between mb-3">
+          <h5 class="card-title mb-0">Progressive overload</h5>
+          <select id="exerciseSelect" class="form-select form-select-sm" style="width:auto">
+            <option value="">— pick an exercise —</option>
+            {% for ex in exercises %}
+              <option value="{{ ex.id }}">{{ ex.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <!-- Empty state -->
+        <div id="chartEmpty" style="height:240px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;opacity:.45">
+          <i class="ti ti-chart-line" style="font-size:48px;color:var(--accent)"></i>
+          <p class="mb-0 small">Pick an exercise above to see your progress chart</p>
+        </div>
+        <!-- Chart (hidden until exercise selected) -->
+        <div id="chartWrap" style="position:relative;height:240px;display:none">
+          <canvas id="progressChart"></canvas>
+        </div>
+        <div id="noDataMsg" class="text-muted small mt-2 mb-0" style="display:none">
+          No data yet for this exercise. <a href="{{ url_for('log_workout') }}">Log a workout!</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-5">
+    <div class="card h-100">
+      <div class="card-body">
+        <h5 class="card-title mb-3">Recent logs</h5>
+        {% if recent_logs %}
+          {% for log in recent_logs %}
+            <div class="log-row d-flex justify-content-between align-items-start">
+              <div>
+                <div class="log-name">{{ log.exercise_name }}</div>
+                <div class="log-detail">{{ log.sets }} sets × {{ log.reps }} reps</div>
+              </div>
+              <div class="text-end">
+                <div class="log-weight">{{ log.weight }} kg</div>
+                <div class="log-date">{{ log.date }}</div>
+              </div>
+            </div>
+          {% endfor %}
+        {% else %}
+          <div class="d-flex flex-column align-items-center justify-content-center h-75 gap-2" style="opacity:.45">
+            <i class="ti ti-clipboard-list" style="font-size:40px;color:var(--accent)"></i>
+            <p class="small mb-0">No workouts yet</p>
+            <a href="{{ url_for('log_workout') }}" class="btn btn-primary btn-sm mt-1">Log your first workout</a>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Personal records -->
+{% if prs %}
+<div class="card mb-4">
+  <div class="card-body">
+    <h5 class="card-title mb-3"><i class="ti ti-trophy me-2" style="color:#facc15"></i>Personal records</h5>
+    <div class="row g-2">
+      {% for pr in prs %}
+        <div class="col-6 col-md-4 col-lg-3">
+          <div class="pr-card">
+            <div class="pr-exercise">{{ pr.exercise_name }}</div>
+            <div class="pr-weight">{{ pr.max_weight }} kg</div>
+            <div class="pr-date">{{ pr.date }}</div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<!-- Exercise showcase -->
+<div class="card">
+  <div class="card-body">
+    <h5 class="card-title mb-1"><i class="ti ti-dumbbell me-2" style="color:var(--accent)"></i>Exercise showcase</h5>
+    <p class="text-muted small mb-3">Click any card to log it, or <a href="{{ url_for('exercises') }}" style="color:var(--accent)">browse the full library</a>.</p>
+    <div class="row g-3">
+      {% set showcase = [
+        ('Bench Press',     'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=400&auto=format&fit=crop', 'Chest'),
+        ('Squat',           'https://images.unsplash.com/photo-1567598508481-65985588e295?w=400&auto=format&fit=crop', 'Legs'),
+        ('Deadlift',        'https://images.unsplash.com/photo-1534368959876-26bf04f2c947?w=400&auto=format&fit=crop', 'Back & Glutes'),
+        ('Overhead Press',  'https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?w=400&auto=format&fit=crop', 'Shoulders'),
+        ('Pull-ups',        'https://images.unsplash.com/photo-1604480133435-25b86862d276?w=400&auto=format&fit=crop', 'Back & Biceps'),
+        ('Barbell Row',     'https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?w=400&auto=format&fit=crop', 'Back'),
+      ] %}
+      {% for name, img, muscle in showcase %}
+        <div class="col-6 col-md-4 col-lg-2">
+          <a href="{{ url_for('log_workout') }}" class="exercise-card-link">
+            <div class="exercise-card">
+              <img src="{{ img }}" alt="{{ name }}" class="exercise-img" loading="lazy" />
+              <div class="exercise-overlay">
+                <div class="exercise-name">{{ name }}</div>
+                <div class="exercise-muscle">{{ muscle }}</div>
+              </div>
+            </div>
+          </a>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const ctx = document.getElementById('progressChart');
+  const chart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: [],
+      datasets: [{
+        label: 'Max weight (kg)',
+        data: [],
+        borderColor: '#4ade80',
+        backgroundColor: 'rgba(74,222,128,0.08)',
+        borderWidth: 2.5,
+        pointRadius: 5,
+        pointBackgroundColor: '#4ade80',
+        pointBorderColor: '#0f1117',
+        pointBorderWidth: 2,
+        fill: true,
+        tension: 0.35
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: 'rgba(26,29,39,0.95)',
+          titleColor: '#9ca3af',
+          bodyColor: '#4ade80',
+          padding: 10,
+          callbacks: { label: ctx => '  ' + ctx.parsed.y + ' kg' }
+        }
+      },
+      scales: {
+        x: {
+          ticks: { color: '#9ca3af', font: { size: 11 } },
+          grid: { color: 'rgba(255,255,255,0.05)' }
+        },
+        y: {
+          ticks: { color: '#9ca3af', font: { size: 11 }, callback: v => v + ' kg' },
+          grid: { color: 'rgba(255,255,255,0.05)' }
+        }
+      }
+    }
+  });
+
+  document.getElementById('exerciseSelect').addEventListener('change', function () {
+    const id = this.value;
+    if (!id) return;
+    fetch('/api/progress/' + id)
+      .then(r => r.json())
+      .then(d => {
+        document.getElementById('chartEmpty').style.display = 'none';
+        document.getElementById('noDataMsg').style.display = 'none';
+        if (d.data.length === 0) {
+          document.getElementById('chartWrap').style.display = 'none';
+          document.getElementById('noDataMsg').style.display = 'block';
+          return;
+        }
+        chart.data.labels = d.labels;
+        chart.data.datasets[0].data = d.data;
+        chart.update();
+        document.getElementById('chartWrap').style.display = 'block';
+      });
+  });
+</script>
+{% endblock %}

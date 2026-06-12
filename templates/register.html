@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% block title %}Register – Gym Tracker{% endblock %}
+{% block content %}
+<div class="auth-wrapper">
+  <!-- Left: gym image -->
+  <div class="auth-image" style="background-image:url('https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=900&auto=format&fit=crop')">
+    <div class="auth-image-overlay">
+      <div class="auth-quote">
+        <i class="ti ti-barbell" style="font-size:2rem;color:var(--accent)"></i>
+        <h2 class="mt-3">Start your<br>fitness journey.</h2>
+        <p class="text-muted mt-2">Log workouts. Crush goals.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right: form -->
+  <div class="auth-form-side">
+    <div class="auth-form-box">
+      <h4 class="mb-1" style="color:var(--text)">Create account</h4>
+      <p class="text-muted small mb-4">Join and start tracking today</p>
+      <form method="POST" action="{{ url_for('register') }}">
+        <div class="mb-3">
+          <label class="form-label">Username</label>
+          <input type="text" name="username" class="form-control" placeholder="Choose a username" required autofocus />
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Password <span class="text-muted">(min 6 chars)</span></label>
+          <input type="password" name="password" class="form-control" placeholder="Choose a password" required />
+        </div>
+        <div class="mb-4">
+          <label class="form-label">Confirm password</label>
+          <input type="password" name="confirm" class="form-control" placeholder="Repeat password" required />
+        </div>
+        <button type="submit" class="btn btn-primary w-100">
+          <i class="ti ti-user-plus me-1"></i>Create account
+        </button>
+      </form>
+      <hr style="border-color:var(--border);margin:1.25rem 0">
+      <p class="text-center text-muted small mb-0">
+        Already have an account? <a href="{{ url_for('login') }}" style="color:var(--accent)">Log in</a>
+      </p>
+    </div>
+  </div>
+</div>
+{% endblock %}
